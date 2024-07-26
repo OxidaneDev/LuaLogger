@@ -1,4 +1,13 @@
-local function consoleLog(...)
+-- Logger.lua
+-- Copyright OxidaneDev 2024
+-- This module imitates "console.log" from javascript
+-- Usage: require("Logger").log("Hello World", 2, {Hi = "Hello"})
+
+local console = {}
+console.__index = console
+
+function console.log(...)
+    local printValue
     local function printTable(t, indent)
         indent = indent or ""
         if type(t) ~= "table" then
@@ -11,11 +20,21 @@ local function consoleLog(...)
             if type(v) == "table" then
                 printTable(v, indent .. "  ")
             else
-                io.write(tostring(v))
+                printValue(v)
             end
             io.write(",\n")
         end
         io.write(indent, "}")
+    end
+
+    printValue = function (value)
+        if type(value) == "string" then
+            io.write("\27[32m\"" .. tostring(value) .. "\"\27[0m")
+        elseif type(value) == "number" then
+            io.write("\27[33m" .. tostring(value) .. "\27[0m")
+        else
+            io.write(tostring(value))
+        end
     end
 
     local args = {...}
@@ -23,7 +42,7 @@ local function consoleLog(...)
         if type(args[i]) == "table" then
             printTable(args[i])
         else
-            io.write(tostring(args[i]))
+            printValue(args[i])
         end
         if i < #args then
             io.write(" ")
@@ -32,34 +51,4 @@ local function consoleLog(...)
     io.write("\n")
 end
 
--- Test code below
-
---[[local TestTable = {
-    "Hi",
-    "\27",
-    13345834,
-    1e8,
-    0x51,
-    0X0543,
-    "#",
-    ["lua"] = 5.1,
-    521.543,
-    {
-        First = "First",
-        "Second",
-        3
-    },
-    ["Test"] = {"Test2"},
-    nil,
-
-}
-
-TestTable.null = nil
-
-consoleLog("Hello World")
-
-for i = 1, 10 do
-    consoleLog("Iteration: ", i)
-end
-
-consoleLog(TestTable) -- The ability to log things in tables.]]
+return console
